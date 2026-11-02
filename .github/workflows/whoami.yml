@@ -1,7 +1,7 @@
 name: Show my subject
- 
+
 on: workflow_dispatch
- 
+
 jobs:
   whoami:
     runs-on: ubuntu-latest
