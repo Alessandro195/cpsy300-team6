@@ -32,7 +32,7 @@ jobs:
       - name: Build and push
         run: |
           IMAGE="$ACR_NAME.azurecr.io/recipes:${{ github.sha }}"
-          docker build --platform linux/amd64 -t "$IMAGE" ./cpsy300/cpsy300-team6
+          docker build --platform linux/amd64 -t "$IMAGE" .
           docker push "$IMAGE"
 
       - name: Deploy
