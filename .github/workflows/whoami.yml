@@ -1,19 +1,43 @@
-name: Show my subject
+name: Build and deploy
 
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  ACR_NAME: YOUR_REGISTRY_NAME
+  RESOURCE_GROUP: rg-cpsy300-project-team6
+  CONTAINERAPP: ca-recipes-team6
 
 jobs:
-  whoami:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Print both possible subjects
-        env:
-          OWNER: ${{ github.repository_owner }}
-          OWNER_ID: ${{ github.repository_owner_id }}
-          FULL: ${{ github.repository }}
-          REPO_ID: ${{ github.repository_id }}
-          REF: ${{ github.ref }}
+      - uses: actions/checkout@v7
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign in to the registry
+        run: az acr login --name "$ACR_NAME"
+
+      - name: Build and push
         run: |
-          REPO="${FULL##*/}"
-          echo "NAME: repo:${FULL}:ref:${REF}"
-          echo "IDS:  repo:${OWNER}@${OWNER_ID}/${REPO}@${REPO_ID}:ref:${REF}"
+          IMAGE="$ACR_NAME.azurecr.io/recipes:${{ github.sha }}"
+          docker build --platform linux/amd64 -t "$IMAGE" ./cpsy300/cpsy300-team6
+          docker push "$IMAGE"
+
+      - name: Deploy
+        run: |
+          az containerapp update \
+            --name "$CONTAINERAPP" \
+            --resource-group "$RESOURCE_GROUP" \
+            --image "$ACR_NAME.azurecr.io/recipes:${{ github.sha }}"
