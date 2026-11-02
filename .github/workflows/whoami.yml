@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  ACR_NAME: YOUR_REGISTRY_NAME
+  ACR_NAME: acrrcosy300team6
   RESOURCE_GROUP: rg-cpsy300-project-team6
   CONTAINERAPP: ca-recipes-team6
 
