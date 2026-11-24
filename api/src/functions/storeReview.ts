@@ -4,9 +4,29 @@
 // Takes each review off the Service Bus queue "reviews" and stores it in Cosmos DB.
 // The web app only drops the review on the queue and answers the visitor straight away;
 // this function does the slow part. Phase 3 adds the AI step here.
-import { app, InvocationContext } from "@azure/functions";
 import { getStore } from "../lib/store";
 import type { Review } from "../lib/types";
+
+// Keep this module usable when Azure Functions type declarations are not installed
+// in the local development environment. The Functions host provides the package at runtime.
+declare const require: (moduleName: string) => {
+  app: {
+    serviceBusQueue: (name: string, options: {
+      connection: string;
+      queueName: string;
+      handler: (message: unknown, context: InvocationContext) => Promise<void>;
+    }) => void;
+  };
+};
+
+interface InvocationContext {
+  invocationId: string;
+  triggerMetadata?: Record<string, unknown>;
+  warn(message: string): void;
+  log(message: string): void;
+}
+
+const { app } = require("@azure/functions");
 
 // The message body arrives as bytes, a string or an object, depending on how it was sent.
 function readBody(message: unknown): Record<string, unknown> | null {
